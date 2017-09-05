@@ -31,8 +31,7 @@ class DoctorSerializer(DynamicFieldsModelSerializer):
         model = Doctor
         fields = [
             'pk',
-            'first_name',
-            'last_name',
+            'name',
             'hospital',
             'email',
             'mobile',
@@ -50,7 +49,8 @@ class PatientDataSerializer(DynamicFieldsModelSerializer):
         model = PatientData
         fields = [
             'pk',
-            'bp',
+            'systolic',
+            'diastolic',
             'weight',
             'heart_rate',
             'time_stamp',
@@ -61,16 +61,20 @@ class PatientDataSerializer(DynamicFieldsModelSerializer):
 class PatientSerializer(DynamicFieldsModelSerializer):
     data = PatientDataSerializer(many=True, read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    doctor = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
 
     class Meta:
         model = Patient
         fields = [
             'pk',
-            'first_name',
-            'last_name',
+            'name',
+            'date_of_birth',
+            'address',
+            'doctor',
             'email',
             'mobile',
             'data',
+            'gender',
             'user'
         ]
 
