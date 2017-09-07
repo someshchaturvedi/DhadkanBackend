@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
 
 class PatientDataCreate(generics.CreateAPIView):
@@ -101,3 +102,34 @@ class Logout(APIView):
         except ParseError:
             return Response({'status': 'error'})
         return Response({'status': 'done'})
+
+
+class DocOnboarding(APIView):
+    def post(self, request, format=None):
+        try:
+            data = request.data
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response = {}
+        u = User(username=data['mobile'], password=data['password'])
+        u.save()
+        response['U_ID'] = u.id
+
+        d = Doctor(
+            name=data['name'],
+            mobile=data['mobile'],
+            email=data['email'],
+            hospital=data['hospital'],
+            user=u)
+        d.save()
+        response['ID'] = d.id
+
+        t = Token(user=u)
+        t.save()
+        response['Token'] = t.key
+
+        return JsonResponse(
+            response, safe=False, content_type='application/json')

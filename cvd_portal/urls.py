@@ -1,8 +1,6 @@
 from django.conf.urls import url
 from rest_framework.authtoken import views
-from cvd_portal.views import PatientDetail, PatientList, UserCreate, \
-    UserDestroy, PatientDataDetail, DoctorDetail, DoctorList, Logout, \
-    PatientDataCreate
+from cvd_portal.views import *
 urlpatterns = [
     url(r'api/patient/(?P<pk>[0-9]+)$', PatientDetail.as_view()),
     url(r'api/patient$', PatientList.as_view()),
@@ -14,4 +12,6 @@ urlpatterns = [
     url(r'api/data$', PatientDataCreate.as_view()),
     url(r'api/login$', views.obtain_auth_token),
     url(r'api/logout$', Logout.as_view()),
+    url(r'api/onboard/doc$', DocOnboarding.as_view()),
+
 ]

@@ -24,23 +24,6 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
                 self.fields.pop(field_name)
 
 
-class DoctorSerializer(DynamicFieldsModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
-    class Meta:
-        model = Doctor
-        fields = [
-            'pk',
-            'name',
-            'hospital',
-            'email',
-            'mobile',
-            'speciality',
-            'designation',
-            'user'
-        ]
-
-
 class PatientDataSerializer(DynamicFieldsModelSerializer):
     patient = serializers.PrimaryKeyRelatedField(
         queryset=Patient.objects.all())
@@ -76,6 +59,25 @@ class PatientSerializer(DynamicFieldsModelSerializer):
             'data',
             'gender',
             'user'
+        ]
+
+
+class DoctorSerializer(DynamicFieldsModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    patients = PatientSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Doctor
+        fields = [
+            'pk',
+            'name',
+            'hospital',
+            'email',
+            'mobile',
+            'speciality',
+            'designation',
+            'user',
+            'patients'
         ]
 
 
