@@ -1,4 +1,4 @@
-from cvd_portal.models import Doctor, Patient, PatientData
+from cvd_portal.models import Doctor, Patient, PatientData, Device
 from cvd_portal.serializers import DoctorSerializer, PatientSerializer,\
     PatientDataSerializer, UserSerializer
 
@@ -104,6 +104,41 @@ class Logout(APIView):
         return Response({'status': 'done'})
 
 
+class PatientOnboarding(APIView):
+    def post(self, request, format=None):
+        try:
+            data = request.data
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response = {}
+        u = User(username=data['mobile'], password=data['password'])
+        u.save()
+        response['U_ID'] = u.id
+
+        d = Doctor.objects.get(id=data['doctor'])
+
+        p = Patient(
+            name=data['name'],
+            mobile=data['mobile'],
+            email=data['email'],
+            address=data['address'],
+            # fcm=data['fcm'],
+            user=u,
+            doctor=d
+            )
+        p.save()
+        response['ID'] = p.id
+        t = Token(user=u)
+        t.save()
+        response['Token'] = t.key
+
+        return JsonResponse(
+            response, safe=False, content_type='application/json')
+
+
 class DocOnboarding(APIView):
     def post(self, request, format=None):
         try:
@@ -123,6 +158,7 @@ class DocOnboarding(APIView):
             mobile=data['mobile'],
             email=data['email'],
             hospital=data['hospital'],
+            # fcm=data['fcm'],
             user=u)
         d.save()
         response['ID'] = d.id
@@ -131,5 +167,48 @@ class DocOnboarding(APIView):
         t.save()
         response['Token'] = t.key
 
+        return JsonResponse(
+            response, safe=False, content_type='application/json')
+
+
+class DeviceCRUD(APIView):
+    def post(self, request, format=None):
+        try:
+            data = request.data
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response = {}
+
+        if data['type'] == 'doctor':
+            d = Doctor.objects.get(pk=int(data['id']))
+            try:
+                if d.device.device_id != data['fcm']:
+                    dev = Device(device_id=data['fcm'])
+                    dev.save()
+                    d.device = dev
+                    d.save()
+                    _id = dev.id
+                else:
+                    _id = d.device.id
+            except:
+                pass
+
+        elif data['type'] == 'patient':
+            p = Patient.objects.get(pk=int(data['id']))
+            try:
+                if p.device.id != data['fcm']:
+                        dev = Device(device_id=data['fcm'])
+                        dev.save()
+                        p.device = dev
+                        p.save()
+                        _id = dev.id
+                else:
+                    _id = p.device.pk
+            except:
+                pass
+        response['pk'] = _id
         return JsonResponse(
             response, safe=False, content_type='application/json')

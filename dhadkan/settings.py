@@ -25,7 +25,7 @@ SECRET_KEY = 'wl-h^c)a!#n6f+&n!hjyq))a#mk8(&rf)#g_485y34yd%fuu_@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0855df7b.ngrok.io', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['88b72ec6.ngrok.io', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -62,6 +62,9 @@ REST_FRAMEWORK = {
     )
 }
 
+FCM_APIKEY = 'AAAAQkMDkEA:APA91bFDkuxSwOQIKmr95_vhWwkpwO5SX4jlSUWaKTY3gxUMiT5qx\
+    N4-saBZYd-rWZL5UmNj8tl7vN9yKq32sMVzqOoRbAQUJV1xdUHllpM41JRHOpDPnRJkg-7dFpH6\
+    ZpqqaC9mwgas'
 
 TEMPLATES = [
     {

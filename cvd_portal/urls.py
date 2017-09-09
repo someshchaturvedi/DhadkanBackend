@@ -13,5 +13,8 @@ urlpatterns = [
     url(r'api/login$', views.obtain_auth_token),
     url(r'api/logout$', Logout.as_view()),
     url(r'api/onboard/doc$', DocOnboarding.as_view()),
+    url(r'api/onboard/patient$', PatientOnboarding.as_view()),
+    url(r'api/device$', DeviceCRUD.as_view()),
+
 
 ]
