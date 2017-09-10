@@ -49,7 +49,7 @@ class DoctorDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DoctorSerializer
 
 
-class DoctorList(generics.ListCreateAPIView):
+class DoctorList(generics.ListAPIView):
     # authentication_classes = (TokenAuthentication,)
     # permission_classes = (IsAuthenticated,)
     serializer_class = DoctorSerializer
@@ -70,19 +70,6 @@ class DoctorList(generics.ListCreateAPIView):
             return JsonResponse(
                 DoctorSerializer(d).data,
                 safe=False, content_type='application/json')
-
-
-class UserCreate(APIView):
-    serializer_class = UserSerializer
-
-    def post(self, request):
-        username = request.data['username']
-        password = request.data['password']
-        u = User(username=username)
-        u.set_password(password)
-        u.save()
-        return JsonResponse(
-            {"id": u.id}, safe=False, content_type='application/json')
 
 
 class UserDestroy(generics.DestroyAPIView):
