@@ -48,7 +48,8 @@ class DeviceSerializer(DynamicFieldsModelSerializer):
 
 
 class PatientSerializer(DynamicFieldsModelSerializer):
-    data = PatientDataSerializer(many=True, read_only=True)
+    # data = PatientDataSerializer(many=True, read_only=True)
+    data = serializers.SerializerMethodField('get_patient_data')
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     doctor = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
     device = DeviceSerializer(read_only=True, many=False)
@@ -69,10 +70,38 @@ class PatientSerializer(DynamicFieldsModelSerializer):
             'device'
         ]
 
+    def get_patient_data(selfself, obj):
+        qset = PatientData.objects.filter(patient_id=obj.pk).order_by('-time_stamp')
+        ser = PatientDataSerializer(qset, many=True, read_only=True)
+        return ser.data
+
+
+class PatientSerializer1(DynamicFieldsModelSerializer):
+    # data = PatientDataSerializer(many=True, read_only=True)
+    # user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    # doctor = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
+    # device = DeviceSerializer(read_only=True, many=False)
+
+    class Meta:
+        model = Patient
+        fields = [
+            'pk',
+            'name',
+            'date_of_birth',
+            # 'address',
+            # 'doctor',
+            # 'email',
+            # 'mobile',
+            # 'data',
+            'gender',
+            # 'user',
+            # 'device'
+        ]
+
 
 class DoctorSerializer(DynamicFieldsModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    patients = PatientSerializer(many=True, read_only=True)
+    patients = PatientSerializer1(many=True, read_only=True)
     device = DeviceSerializer(read_only=True, many=False)
 
     class Meta:

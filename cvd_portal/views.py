@@ -19,8 +19,8 @@ from .fcm import send_message
 
 
 class PatientDataCreate(generics.CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (IsAuthenticated,)
     serializer_class = PatientDataSerializer
 
 
@@ -50,6 +50,12 @@ class DoctorDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = DoctorSerializer(instance)
+    #     # serializer = DoctorSerializer(instance, fields=('pk', 'email'))
+    #     return Response(serializer.data)
 
 
 class DoctorList(generics.ListAPIView):
@@ -165,6 +171,7 @@ class PatientOnboarding(APIView):
             mobile=data['mobile'],
             email=data['email'],
             address=data['address'],
+            date_of_birth=data['date_of_birth'],
             # fcm=data['fcm'],
             user=u,
             doctor=d
