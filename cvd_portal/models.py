@@ -51,5 +51,5 @@ class PatientData(models.Model):
     time_stamp = models.DateTimeField(default=datetime.datetime.now)
 
     def __str__(self):
-        return self.patient.name + ' ' + self.patient.last_name + ' ' + \
-            self.time_stamp
+        return self.patient.name + ' ' + \
+            str(self.time_stamp)

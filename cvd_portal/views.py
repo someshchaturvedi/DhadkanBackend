@@ -3,6 +3,7 @@ from cvd_portal.serializers import DoctorSerializer, PatientSerializer,\
     PatientDataSerializer, UserSerializer
 
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from django.http import JsonResponse
 
 from rest_framework.exceptions import ParseError
@@ -13,6 +14,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+
+from .fcm import send_message
 
 
 class PatientDataCreate(generics.CreateAPIView):
@@ -77,6 +80,56 @@ class UserDestroy(generics.DestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class Login(APIView):
+    def post(self, request, format=None):
+
+        try:
+            data = request.data
+            print(data)
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if "user" not in data or "password" not in data:
+            return Response(
+                'Wrong credentials',
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        username = data['user']
+        password = data['password']
+
+        user = authenticate(username=username, password=password)
+        if not user:
+            return Response(
+               'Username password are not correct',
+               status=status.HTTP_404_NOT_FOUND
+            )
+        response = {}
+        response["U_ID"] = user.id
+
+        if Patient.objects.filter(user=user).exists():
+            p = Patient.objects.get(user=user)
+            response['Type'] = 'patient'
+            response['ID'] = p.id
+        if Doctor.objects.filter(user=user).exists():
+            d = Doctor.objects.get(user=user)
+            response['Type'] = 'doctor'
+            response['ID'] = d.pk
+        else:
+            return Response(
+                    'Registration not completed',
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.get_or_create(user=user)
+        response['Token'] = token[0].key
+        return JsonResponse(
+            response, safe=False, content_type='application/json')
 
 
 class Logout(APIView):
@@ -162,6 +215,7 @@ class DeviceCRUD(APIView):
     def post(self, request, format=None):
         try:
             data = request.data
+            print(data)
         except ParseError as error:
             return Response(
                 'Invalid JSON - {0}'.format(error.detail),
@@ -172,30 +226,58 @@ class DeviceCRUD(APIView):
         if data['type'] == 'doctor':
             d = Doctor.objects.get(pk=int(data['id']))
             try:
-                if d.device.device_id != data['fcm']:
+                if d.device is not None and d.device.device_id == data['fcm']:
+                    _id = d.device.id
+                else:
                     dev = Device(device_id=data['fcm'])
                     dev.save()
                     d.device = dev
                     d.save()
                     _id = dev.id
-                else:
-                    _id = d.device.id
+
             except:
                 pass
 
         elif data['type'] == 'patient':
             p = Patient.objects.get(pk=int(data['id']))
+            print(p)
             try:
-                if p.device.id != data['fcm']:
-                        dev = Device(device_id=data['fcm'])
-                        dev.save()
-                        p.device = dev
-                        p.save()
-                        _id = dev.id
+                if p.device is not None and data['fcm'] == p.device.id:
+                    _id = p.device.id
                 else:
-                    _id = p.device.pk
+                    dev = Device(device_id=data['fcm'])
+                    dev.save()
+                    p.device = dev
+                    p.save()
+                    _id = dev.id
+
             except:
                 pass
+        else:
+            return Response(
+                'Server Error',
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         response['pk'] = _id
+        return JsonResponse(
+            response, safe=False, content_type='application/json')
+
+
+class NotificationCRUD(APIView):
+    def post(self, request, format=None):
+        try:
+            data = request.data
+            print(data)
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response = {}
+        msg = data['message']
+        _to = data['to']
+        _from = data['from']
+        response['response'] = send_message(_to, _from, msg)
         return JsonResponse(
             response, safe=False, content_type='application/json')

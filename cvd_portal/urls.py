@@ -10,11 +10,10 @@ urlpatterns = [
     url(r'api/user/(?P<pk>[0-9]+)$', UserDestroy.as_view()),
     url(r'api/data/(?P<pk>[0-9]+)$', PatientDataDetail.as_view()),
     url(r'api/data$', PatientDataCreate.as_view()),
-    url(r'api/login$', views.obtain_auth_token),
+    url(r'api/login$', Login.as_view()),
     url(r'api/logout$', Logout.as_view()),
     url(r'api/onboard/doc$', DocOnboarding.as_view()),
     url(r'api/onboard/patient$', PatientOnboarding.as_view()),
     url(r'api/device$', DeviceCRUD.as_view()),
-
-
+    url(r'api/notification$', NotificationCRUD.as_view()),
 ]

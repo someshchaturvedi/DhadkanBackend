@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from cvd_portal.models import Doctor, Patient, PatientData
+from cvd_portal.models import *
 from django.contrib.auth.models import User
 
 
@@ -41,10 +41,17 @@ class PatientDataSerializer(DynamicFieldsModelSerializer):
         ]
 
 
+class DeviceSerializer(DynamicFieldsModelSerializer):
+    class Meta:
+        model = Device
+        fields = '__all__'
+
+
 class PatientSerializer(DynamicFieldsModelSerializer):
     data = PatientDataSerializer(many=True, read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     doctor = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
+    device = DeviceSerializer(read_only=True, many=False)
 
     class Meta:
         model = Patient
@@ -58,13 +65,15 @@ class PatientSerializer(DynamicFieldsModelSerializer):
             'mobile',
             'data',
             'gender',
-            'user'
+            'user',
+            'device'
         ]
 
 
 class DoctorSerializer(DynamicFieldsModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     patients = PatientSerializer(many=True, read_only=True)
+    device = DeviceSerializer(read_only=True, many=False)
 
     class Meta:
         model = Doctor
@@ -77,7 +86,8 @@ class DoctorSerializer(DynamicFieldsModelSerializer):
             'speciality',
             'designation',
             'user',
-            'patients'
+            'patients',
+            'device'
         ]
 
 
