@@ -19,8 +19,8 @@ from .fcm import send_message
 
 
 class PatientDataCreate(generics.CreateAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = (IsAuthenticated,)
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = PatientDataSerializer
 
 
@@ -37,6 +37,22 @@ class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
 
+    def update(self, request, pk):
+        try:
+            data = request.data
+            print(data)
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        d = Doctor.objects.get(pk=data['d_id'])
+        p = Patient.objects.get(pk=pk)
+        p.doctor = d
+        p.save()
+        return JsonResponse(
+            {"id": p.id}, safe=False, content_type='application/json')
+
 
 class PatientList(generics.ListCreateAPIView):
     authentication_classes = (TokenAuthentication,)
@@ -50,12 +66,6 @@ class DoctorDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = DoctorSerializer(instance)
-    #     # serializer = DoctorSerializer(instance, fields=('pk', 'email'))
-    #     return Response(serializer.data)
 
 
 class DoctorList(generics.ListAPIView):
@@ -121,7 +131,7 @@ class Login(APIView):
             p = Patient.objects.get(user=user)
             response['Type'] = 'patient'
             response['ID'] = p.id
-        if Doctor.objects.filter(user=user).exists():
+        elif Doctor.objects.filter(user=user).exists():
             d = Doctor.objects.get(user=user)
             response['Type'] = 'doctor'
             response['ID'] = d.pk
