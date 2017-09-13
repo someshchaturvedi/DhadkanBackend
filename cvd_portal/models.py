@@ -1,6 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 import datetime
+from dateutil import tz
+
+
+class CustomDateTimeField(models.DateTimeField):
+    def from_db_value(self, value, expression, connection, context):
+        if value is None:
+            return value
+        to_zone = tz.gettz('Asia/Kolkata')
+        return value.astimezone(to_zone)
 
 
 class Device(models.Model):
@@ -48,8 +57,7 @@ class PatientData(models.Model):
     diastolic = models.IntegerField(default=0)
     weight = models.IntegerField()
     heart_rate = models.IntegerField()
-    time_stamp = models.DateTimeField(default=datetime.datetime.now)
+    time_stamp = CustomDateTimeField(default=datetime.datetime.now)
 
     def __str__(self):
-        return self.patient.name + ' ' + \
-            str(self.time_stamp)
+        return self.patient.name + ' ' + str(self.time_stamp)
