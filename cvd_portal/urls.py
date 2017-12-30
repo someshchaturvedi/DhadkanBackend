@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'api/user/(?P<pk>[0-9]+)$', UserDestroy.as_view()),
     url(r'api/data/(?P<pk>[0-9]+)$', PatientDataDetail.as_view()),
     url(r'api/data$', PatientDataCreate.as_view()),
+    url(r'api/image$', PatientImageCreate.as_view()),
     url(r'api/login$', Login.as_view()),
     url(r'api/logout$', Logout.as_view()),
     url(r'api/onboard/doc$', DocOnboarding.as_view()),

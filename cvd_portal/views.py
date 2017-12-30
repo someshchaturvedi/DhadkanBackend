@@ -1,6 +1,6 @@
 from cvd_portal.models import Doctor, Patient, PatientData, Device
 from cvd_portal.serializers import DoctorSerializer, PatientSerializer,\
-    PatientDataSerializer, UserSerializer
+    PatientDataSerializer, UserSerializer, PatientImageSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -298,3 +298,9 @@ class NotificationCRUD(APIView):
         response['response'] = send_message(_to, _from, msg)
         return JsonResponse(
             response, safe=False, content_type='application/json')
+
+
+class PatientImageCreate(generics.CreateAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PatientImageSerializer
