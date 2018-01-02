@@ -1,4 +1,4 @@
-from cvd_portal.models import Doctor, Patient, PatientData, Device
+from cvd_portal.models import Doctor, Patient, PatientData, Device, Image
 from cvd_portal.serializers import DoctorSerializer, PatientSerializer,\
     PatientDataSerializer, UserSerializer, PatientImageSerializer
 
@@ -29,6 +29,19 @@ class PatientDataDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = PatientData.objects.all()
     serializer_class = PatientDataSerializer
+
+
+class PatientImageDetail(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Image.objects.all()
+    serializer_class = PatientImageSerializer
+
+
+class PatientImageCreate(generics.CreateAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PatientImageSerializer
 
 
 class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -298,9 +311,3 @@ class NotificationCRUD(APIView):
         response['response'] = send_message(_to, _from, msg)
         return JsonResponse(
             response, safe=False, content_type='application/json')
-
-
-class PatientImageCreate(generics.CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    serializer_class = PatientImageSerializer

@@ -55,6 +55,19 @@ class PatientImageSerializer(DynamicFieldsModelSerializer):
         ]
 
 
+class PatientImageNameSerializer(DynamicFieldsModelSerializer):
+    patient = serializers.PrimaryKeyRelatedField(
+        queryset=Patient.objects.all())
+
+    class Meta:
+        model = Image
+        fields = [
+            'pk',
+            'time_stamp',
+            'patient'
+        ]
+
+
 class DeviceSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Device
@@ -64,6 +77,7 @@ class DeviceSerializer(DynamicFieldsModelSerializer):
 class PatientSerializer(DynamicFieldsModelSerializer):
     # data = PatientDataSerializer(many=True, read_only=True)
     data = serializers.SerializerMethodField('get_patient_data')
+    images = serializers.SerializerMethodField('get_image_data')
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     doctor = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
     device = DeviceSerializer(read_only=True, many=False)
@@ -79,15 +93,22 @@ class PatientSerializer(DynamicFieldsModelSerializer):
             'email',
             'mobile',
             'data',
+            'images',
             'gender',
             'user',
             'device'
         ]
 
-    def get_patient_data(selfself, obj):
-        qset = PatientData.objects.filter(
-            patient_id=obj.pk).order_by('-time_stamp')
+    def get_patient_data(self, obj):
+        qset = PatientData.objects.filter(patient_id=obj.pk).\
+            order_by('-time_stamp')
         ser = PatientDataSerializer(qset, many=True, read_only=True)
+        return ser.data
+
+    def get_image_data(self, obj):
+        qset = Image.objects.filter(
+            patient_id=obj.pk).order_by('-time_stamp')
+        ser = PatientImageNameSerializer(qset, many=True, read_only=True)
         return ser.data
 
 
