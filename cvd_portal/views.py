@@ -183,7 +183,8 @@ class PatientOnboarding(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         response = {}
-        u = User(username=data['mobile'], password=data['password'])
+        u = User(username=data['mobile'])
+        u.set_password(data['password'])
         u.save()
         response['U_ID'] = u.id
 
@@ -219,7 +220,8 @@ class DocOnboarding(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         response = {}
-        u = User(username=data['mobile'], password=data['password'])
+        u = User(username=data['mobile'])
+        u.set_password(data['password'])
         u.save()
         response['U_ID'] = u.id
 
