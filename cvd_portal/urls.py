@@ -18,4 +18,12 @@ urlpatterns = [
     url(r'api/onboard/patient$', PatientOnboarding.as_view()),
     url(r'api/device$', DeviceCRUD.as_view()),
     url(r'api/notification$', NotificationCRUD.as_view()),
+    url(r'api/gen_otp$', gen_otp.as_view()),
+    url(r'api/verify_otp$', verify_otp.as_view()),
+    url(
+        r'api/notification/patient/(?P<pk>[0-9]+)$',
+        patient_notification.as_view()),
+    url(
+        r'api/notification/doctor/(?P<pk>[0-9]+)$',
+        doctor_notification.as_view())
 ]

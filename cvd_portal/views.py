@@ -1,6 +1,5 @@
-from cvd_portal.models import Doctor, Patient, PatientData, Device, Image
-from cvd_portal.serializers import DoctorSerializer, PatientSerializer,\
-    PatientDataSerializer, UserSerializer, PatientImageSerializer
+from cvd_portal.models import *
+from cvd_portal.serializers import *
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -15,13 +14,20 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from .fcm import send_message
+from cvd_portal.inform import check
+from cvd_portal.fcm import send_message
+
+from random import randint
 
 
 class PatientDataCreate(generics.CreateAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = PatientDataSerializer
+
+    def post(self, request):
+        check(request)
+        return super().post(request)
 
 
 class PatientDataDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -196,7 +202,7 @@ class PatientOnboarding(APIView):
             email=data['email'],
             address=data['address'],
             date_of_birth=data['date_of_birth'],
-            # fcm=data['fcm'],
+            gender=data['gender'],
             user=u,
             doctor=d
             )
@@ -307,9 +313,152 @@ class NotificationCRUD(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         response = {}
+        p_id = data['p_id']
+        p = Patient.objects.get(pk=p_id)
         msg = data['message']
         _to = data['to']
         _from = data['from']
         response['response'] = send_message(_to, _from, msg)
+        Notifications(text=msg, patient=p).save()
         return JsonResponse(
             response, safe=False, content_type='application/json')
+
+
+class gen_otp(APIView):
+    def post(self, request, format=None):
+        print("yo")
+        try:
+            data = request.data
+            print(data)
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response = {}
+        mobile = data['user']
+        otp = randint(1000, 9999)
+        u = User.objects.get(username=mobile)
+        print(u)
+        if u is None:
+            response['message'] = "Mobile number not registered"
+            return JsonResponse(
+                response,
+                safe=False, content_type='application/json', status=404)
+        OTP.objects.filter(user=u).delete()
+        if Patient.objects.filter(user=u).exists():
+            p = Patient.objects.get(user=u)
+            o = OTP(otp=otp, user_type="Patient", user_type_id=p.id, user=u)
+            o.save()
+            response['otp_id'] = o.id
+            send_message(p.device.device_id, None, str(otp))
+            return JsonResponse(
+                response,
+                safe=False, content_type='application/json')
+
+        elif Doctor.objects.filter(user=u).exists():
+            d = Doctor.objects.get(user=u)
+            o = OTP(otp=otp, user_type="Doctor", user_type_id=d.id, user=u)
+            o.save()
+            response['otp_id'] = o.id
+            send_message(d.device.device_id, None, str(otp))
+            return JsonResponse(
+                response,
+                safe=False, content_type='application/json')
+        response['message'] = "Not Registered"
+        return JsonResponse(
+            response,
+            safe=False, content_type='application/json', status=404)
+
+
+class verify_otp(APIView):
+    def post(self, request, format=None):
+        # print("yo")
+        try:
+            data = request.data
+            print(data)
+        except ParseError as error:
+            return Response(
+                'Invalid JSON - {0}'.format(error.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response = {}
+        new_pass = data['new_pass']
+        # print(new_pass)
+        otp = int(data['otp'])
+        o = OTP.objects.get(pk=data['otp_id'])
+        # print(o)
+        print(o.otp)
+        print(otp)
+        if o.otp != otp:
+            response['message'] = "OTP does not match"
+            return JsonResponse(
+                response,
+                safe=False, content_type='application/json', status=401)
+        response["U_ID"] = o.user_id
+        print(response)
+        u = o.user
+        u.set_password(new_pass)
+        u.save()
+
+        if o.user_type == "Patient":
+            p = Patient.objects.get(pk=o.user_type_id)
+            response['Type'] = 'patient'
+            response['ID'] = p.id
+        elif o.user_type == "Doctor":
+            d = Doctor.objects.get(pk=o.user_type_id)
+            response['Type'] = 'doctor'
+            response['ID'] = d.pk
+        else:
+            o.delete()
+            return Response(
+                    'Registration not completed',
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+        Token.objects.filter(user=o.user).delete()
+        token = Token.objects.get_or_create(user=o.user)
+        response['Token'] = token[0].key
+        o.delete()
+        return JsonResponse(
+            response,
+            safe=False, content_type='application/json')
+
+
+class patient_notification(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk, format=None):
+        p = Patient.objects.get(pk=pk)
+        nl = Notifications.objects.filter(patient=p).order_by('-time_stamp')
+        response = {
+            "notifications": []
+        }
+        for n in nl:
+            no = {"text": ""}
+            no["text"] = n.text
+            response["notifications"].append(no)
+        return JsonResponse(
+            response,
+            safe=False, content_type='application/json')
+
+
+class doctor_notification(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk, format=None):
+        d = Doctor.objects.get(pk=pk)
+        nl = Notifications.objects.filter(doctor=d).order_by('-time_stamp')
+        response = {
+            "notifications": []
+        }
+        for n in nl:
+            no = {"text": ""}
+            no["text"] = n.text
+            response["notifications"].append(no)
+        print(response)
+        return JsonResponse(
+            response,
+            safe=False, content_type='application/json')
