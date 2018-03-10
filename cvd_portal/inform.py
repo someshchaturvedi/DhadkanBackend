@@ -14,15 +14,15 @@ def gen_message(co, p):
     if gen_msg is False:
         return None
     else:
-        message = "Patient named " + p.name + " suffered drastic changes in "
+        message = "Patient named '" + p.name + "' suffered drastic changes in "
         if(change_observed[0] is True):
-            message = message + "weight "
+            message = message + "'weight' "
         if(change_observed[1] is True):
-            message = message + "heart rate "
+            message = message + "'heart-rate' "
         if(change_observed[2] is True):
-            message = message + "blood Pressure : systolic "
+            message = message + "'BP-systolic' "
         if(change_observed[3] is True):
-            message = message + "blood Pressure : diastolic "
+            message = message + "'BP-diastolic' "
         message = message + "in recent few days."
         return message
 
