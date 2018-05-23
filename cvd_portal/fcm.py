@@ -10,7 +10,7 @@ def send_message(_to, _from, message):
     body = json.dumps(body).encode('utf8')
     headers = {
         'content-type': 'application/json',
-        'Authorization': 'key=' + 'AAAAQkMDkEA:APA91bFDkuxSwOQIKmr95_vhWwkpwO5SX4jlSUWaKTY3gxUMiT5qxN4-saBZYd-rWZL5UmNj8tl7vN9yKq32sMVzqOoRbAQUJV1xdUHllpM41JRHOpDPnRJkg-7dFpH6ZpqqaC9mwgas'
+        'Authorization': 'key=' + ''
         }
     r = requests.post(url, data=body, headers=headers)
     print(r.text)
